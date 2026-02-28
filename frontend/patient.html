@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MHP — Patient Portal</title>
+    <style>
+        :root {
+            --primary: #0f766e;
+            --primary-light: #ccfbf1;
+            --primary-dark: #0a5c56;
+            --bg: #f0fdfa;
+            --surface: #ffffff;
+            --text: #134e4a;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --danger: #dc2626;
+            --danger-light: #fef2f2;
+            --shadow: 0 4px 24px rgba(15,118,110,0.08);
+            --radius: 16px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ─── Header ─── */
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+            position: sticky; top: 0; z-index: 50;
+        }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .header-icon {
+            width: 38px; height: 38px;
+            background: rgba(255,255,255,0.18);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+        }
+        .header-title { font-size: 16px; font-weight: 600; }
+        .header-sub { font-size: 11px; opacity: 0.8; }
+        .btn-logout {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn-logout:hover { background: rgba(255,255,255,0.25); }
+
+        /* ─── Screen Sections ─── */
+        .screen { display: none; flex: 1; }
+        .screen.active { display: flex; flex-direction: column; }
+
+        /* ═══════════════════ WELCOME SCREEN ═══════════════════ */
+        .welcome-screen {
+            align-items: center;
+            justify-content: center;
+            padding: 40px 24px;
+        }
+        .welcome-card {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 40px 36px;
+            box-shadow: var(--shadow);
+            max-width: 520px;
+            width: 100%;
+            text-align: center;
+        }
+        .noor-avatar {
+            width: 88px; height: 88px;
+            background: linear-gradient(135deg, var(--primary), #2dd4bf);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center; justify-content: center;
+            font-size: 42px;
+            margin-bottom: 20px;
+            box-shadow: 0 6px 20px rgba(15,118,110,0.25);
+            position: relative;
+        }
+        .noor-status {
+            position: absolute;
+            bottom: 4px; right: 4px;
+            width: 18px; height: 18px;
+            background: #22c55e;
+            border: 3px solid var(--surface);
+            border-radius: 50%;
+        }
+        .welcome-card h2 { font-size: 24px; color: var(--text); margin-bottom: 4px; }
+        .welcome-card .greeting {
+            color: var(--muted); font-size: 15px; margin-bottom: 24px;
+        }
+        .noor-ready {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 8px 18px;
+            background: var(--primary-light); color: var(--primary);
+            border-radius: 20px; font-size: 13px; font-weight: 600;
+            margin-bottom: 24px;
+        }
+        .noor-ready .dot {
+            width: 8px; height: 8px;
+            background: #22c55e; border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        .last-visit {
+            background: #f8fafc; border-radius: 14px;
+            padding: 20px; margin-bottom: 28px; text-align: left;
+        }
+        .last-visit-header {
+            font-size: 12px; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.5px; color: var(--muted); margin-bottom: 12px;
+        }
+        .last-visit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .lv-item {
+            padding: 8px 12px; background: white;
+            border-radius: 8px; border: 1px solid var(--border);
+        }
+        .lv-item .lbl { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+        .lv-item .val { font-size: 14px; font-weight: 600; color: var(--text); }
+        .first-visit-msg {
+            background: var(--primary-light); border-radius: 14px;
+            padding: 20px; margin-bottom: 28px; font-size: 14px;
+            color: var(--primary-dark); line-height: 1.5;
+        }
+        .btn-start {
+            width: 100%; padding: 16px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white; border: none; border-radius: 14px;
+            font-size: 17px; font-weight: 600; cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .btn-start:hover { opacity: 0.92; }
+        .btn-start:active { transform: scale(0.98); }
+        .btn-start:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* ═══════════════════ VOICE SCREEN ═══════════════════ */
+        .voice-screen {
+            align-items: center;
+            padding: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Voice header */
+        .voice-header {
+            width: 100%;
+            padding: 14px 24px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .voice-header-left { display: flex; align-items: center; gap: 12px; }
+        .voice-noor-mini {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--primary), #2dd4bf);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+        }
+        .voice-noor-name { font-size: 14px; font-weight: 600; color: var(--text); }
+        .voice-noor-status { font-size: 11px; color: #22c55e; }
+        .mode-toggle {
+            padding: 8px 14px;
+            background: #f1f5f9;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            color: var(--text);
+            display: flex; align-items: center; gap: 6px;
+        }
+        .mode-toggle:hover { background: #e2e8f0; }
+
+        /* Voice center — avatar + status */
+        .voice-center {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 24px 20px;
+            gap: 24px;
+        }
+        .voice-avatar-container {
+            position: relative;
+            width: 160px; height: 160px;
+        }
+        .voice-avatar {
+            width: 160px; height: 160px;
+            background: linear-gradient(135deg, var(--primary), #2dd4bf);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 72px;
+            box-shadow: 0 8px 32px rgba(15,118,110,0.25);
+            position: relative;
+            z-index: 2;
+            transition: transform 0.3s;
+        }
+        /* Pulsing ring when Noor is speaking */
+        .voice-avatar-container.speaking .voice-avatar {
+            transform: scale(1.05);
+        }
+        .voice-ring {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 160px; height: 160px;
+            border-radius: 50%;
+            border: 3px solid var(--primary);
+            opacity: 0;
+            z-index: 1;
+        }
+        .voice-avatar-container.speaking .voice-ring {
+            animation: speakRing 1.5s ease-out infinite;
+        }
+        .voice-avatar-container.speaking .voice-ring:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+        @keyframes speakRing {
+            0% { width: 160px; height: 160px; opacity: 0.6; }
+            100% { width: 240px; height: 240px; opacity: 0; }
+        }
+
+        /* Listening indicator */
+        .voice-avatar-container.listening .voice-avatar {
+            box-shadow: 0 0 0 6px rgba(34,197,94,0.3), 0 8px 32px rgba(15,118,110,0.25);
+        }
+
+        .voice-status-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text);
+            text-align: center;
+        }
+        .voice-status-sub {
+            font-size: 13px;
+            color: var(--muted);
+            text-align: center;
+            margin-top: -16px;
+        }
+
+        /* Live transcript area */
+        .voice-transcript {
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 16px 24px;
+            background: #f8fafc;
+            border-top: 1px solid var(--border);
+        }
+        .voice-transcript-header {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+        .vt-line {
+            padding: 4px 0;
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--text);
+            border-bottom: 1px solid #eee;
+        }
+        .vt-line:last-child { border-bottom: none; }
+        .vt-line .vt-role {
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .vt-line .vt-role.ai { color: var(--primary); }
+        .vt-line .vt-role.patient { color: #6366f1; }
+
+        /* Voice controls */
+        .voice-controls {
+            width: 100%;
+            padding: 16px 24px 24px;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+        .mic-btn {
+            width: 64px; height: 64px;
+            border-radius: 50%;
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 16px rgba(15,118,110,0.3);
+            transition: all 0.2s;
+            position: relative;
+        }
+        .mic-btn:hover { transform: scale(1.05); }
+        .mic-btn.muted {
+            background: #ef4444;
+            box-shadow: 0 4px 16px rgba(239,68,68,0.3);
+        }
+        .mic-label {
+            font-size: 11px;
+            color: var(--muted);
+            text-align: center;
+        }
+        .end-call-btn {
+            width: 52px; height: 52px;
+            border-radius: 50%;
+            border: none;
+            background: #ef4444;
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 16px rgba(239,68,68,0.3);
+            transition: all 0.2s;
+        }
+        .end-call-btn:hover { transform: scale(1.05); background: #dc2626; }
+
+        /* Urgent banner */
+        .urgent-banner {
+            display: none;
+            width: 100%;
+            padding: 12px 24px;
+            background: var(--danger-light);
+            border-bottom: 2px solid var(--danger);
+            color: var(--danger);
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .urgent-banner.show { display: block; }
+
+        /* ═══════════════════ TEXT CHAT SCREEN ═══════════════════ */
+        .chat-header-bar {
+            padding: 12px 24px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center;
+            justify-content: space-between;
+        }
+        .chat-header-left { display: flex; align-items: center; gap: 12px; }
+        .chat-noor-mini {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--primary), #2dd4bf);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+        }
+        .chat-noor-info .name { font-size: 14px; font-weight: 600; color: var(--text); }
+        .chat-noor-info .status { font-size: 11px; color: #22c55e; }
+        .chat-messages {
+            flex: 1; overflow-y: auto; padding: 20px 24px;
+            display: flex; flex-direction: column; gap: 14px;
+        }
+        .msg {
+            max-width: 78%; padding: 14px 18px;
+            border-radius: 18px; font-size: 15px; line-height: 1.6;
+            animation: fadeUp 0.3s ease;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .msg.ai {
+            background: var(--surface); border: 1px solid var(--border);
+            align-self: flex-start; border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        }
+        .msg.ai .sender {
+            font-size: 11px; font-weight: 700; color: var(--primary);
+            margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px;
+        }
+        .msg.human {
+            background: var(--primary); color: white;
+            align-self: flex-end; border-bottom-right-radius: 4px;
+        }
+        .msg.urgent {
+            background: var(--danger-light); border: 2px solid var(--danger);
+            color: var(--danger); align-self: center; text-align: center;
+            max-width: 90%; font-size: 14px;
+        }
+        .typing-indicator {
+            display: none; align-self: flex-start;
+            padding: 14px 18px; background: var(--surface);
+            border: 1px solid var(--border); border-radius: 18px;
+            border-bottom-left-radius: 4px; gap: 6px; align-items: center;
+        }
+        .typing-indicator.show { display: flex; }
+        .tdot {
+            width: 8px; height: 8px; background: var(--primary);
+            border-radius: 50%; animation: bounce 1.4s infinite ease-in-out;
+        }
+        .tdot:nth-child(2) { animation-delay: 0.2s; }
+        .tdot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-8px); }
+        }
+        .chat-input-bar {
+            padding: 14px 24px; background: var(--surface);
+            border-top: 1px solid var(--border);
+            display: flex; gap: 10px; align-items: flex-end;
+        }
+        .chat-input-bar textarea {
+            flex: 1; padding: 12px 16px;
+            border: 2px solid var(--border); border-radius: 12px;
+            font-size: 15px; font-family: inherit; resize: none;
+            outline: none; min-height: 46px; max-height: 120px;
+            transition: border-color 0.2s; background: #fafafa;
+        }
+        .chat-input-bar textarea:focus { border-color: var(--primary); background: white; }
+        .btn-send {
+            padding: 12px 22px; background: var(--primary); color: white;
+            border: none; border-radius: 12px; font-size: 15px;
+            font-weight: 600; cursor: pointer; white-space: nowrap;
+        }
+        .btn-send:hover { background: var(--primary-dark); }
+        .btn-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* ═══════════════════ COMPLETION SCREEN ═══════════════════ */
+        .complete-screen {
+            align-items: center; justify-content: center; padding: 40px 24px;
+        }
+        .complete-card {
+            background: var(--surface); border-radius: 24px;
+            padding: 48px 36px; box-shadow: var(--shadow);
+            max-width: 480px; width: 100%; text-align: center;
+        }
+        .check-icon {
+            width: 80px; height: 80px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border-radius: 50%;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 40px; color: white; margin-bottom: 24px;
+            box-shadow: 0 6px 20px rgba(34,197,94,0.3);
+        }
+        .complete-card h2 { font-size: 22px; margin-bottom: 8px; color: var(--text); }
+        .complete-card p {
+            color: var(--muted); font-size: 15px; line-height: 1.6; margin-bottom: 20px;
+        }
+        .complete-items {
+            background: #f8fafc; border-radius: 12px;
+            padding: 16px 20px; text-align: left; margin-bottom: 28px;
+        }
+        .complete-items .ci {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 0; font-size: 14px; color: var(--text);
+            border-bottom: 1px solid var(--border);
+        }
+        .complete-items .ci:last-child { border-bottom: none; }
+        .complete-items .ci .ck { color: #22c55e; font-size: 16px; }
+        .btn-back {
+            padding: 14px 32px; background: var(--primary); color: white;
+            border: none; border-radius: 12px; font-size: 15px;
+            font-weight: 600; cursor: pointer; text-decoration: none;
+        }
+        .btn-back:hover { background: var(--primary-dark); }
+    </style>
+</head>
+<body>
+    <!-- ═══════ HEADER ═══════ -->
+    <div class="header">
+        <div class="header-left">
+            <div class="header-icon">🩺</div>
+            <div>
+                <div class="header-title">MHP Clinical Intake</div>
+                <div class="header-sub">Cancer Pain Management</div>
+            </div>
+        </div>
+        <a class="btn-logout" href="/">← Logout</a>
+    </div>
+
+    <!-- ═══════════════════ WELCOME SCREEN ═══════════════════ -->
+    <div class="screen welcome-screen active" id="welcomeScreen">
+        <div class="welcome-card">
+            <div class="noor-avatar">
+                👩‍⚕️
+                <div class="noor-status"></div>
+            </div>
+            <h2 id="welcomeName">Welcome</h2>
+            <p class="greeting" id="welcomeGreeting">Your clinical assistant Noor is ready for your intake session.</p>
+            <div class="noor-ready">
+                <span class="dot"></span>
+                Noor is ready
+            </div>
+
+            <div class="last-visit" id="lastVisitBox" style="display:none;">
+                <div class="last-visit-header">📋 Your Last Visit Summary</div>
+                <div class="last-visit-grid" id="lastVisitGrid"></div>
+            </div>
+
+            <div class="first-visit-msg" id="firstVisitMsg" style="display:none;">
+                Welcome to MHP! This is your first visit. Noor will guide you through a simple intake conversation to help your doctor prepare for your consultation.
+            </div>
+
+            <button class="btn-start" id="btnStart" onclick="startConsultation()">
+                <span>🎤</span> Start Consultation (Voice)
+            </button>
+            <div style="margin-top:12px; font-size:12px; color:var(--muted);">
+                Noor will speak with you naturally. You can also
+                <a href="#" onclick="startTextMode(); return false;" style="color:var(--primary);">use text chat instead</a>.
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════ VOICE SCREEN ═══════════════════ -->
+    <div class="screen voice-screen" id="voiceScreen">
+        <!-- Header with mode toggle -->
+        <div class="voice-header">
+            <div class="voice-header-left">
+                <div class="voice-noor-mini">👩‍⚕️</div>
+                <div>
+                    <div class="voice-noor-name">Noor</div>
+                    <div class="voice-noor-status" id="voiceNoorStatus">● Connecting...</div>
+                </div>
+            </div>
+            <button class="mode-toggle" onclick="switchToText()">
+                💬 Switch to Text
+            </button>
+        </div>
+
+        <!-- Urgent banner -->
+        <div class="urgent-banner" id="urgentBanner">
+            ⚠️ Your doctor has been alerted immediately. You are not alone — please continue.
+        </div>
+
+        <!-- Center — avatar + status -->
+        <div class="voice-center">
+            <div class="voice-avatar-container" id="voiceAvatarContainer">
+                <div class="voice-ring"></div>
+                <div class="voice-ring"></div>
+                <div class="voice-avatar">👩‍⚕️</div>
+            </div>
+            <div class="voice-status-text" id="voiceStatusText">Connecting to Noor...</div>
+            <div class="voice-status-sub" id="voiceStatusSub">Please allow microphone access when prompted</div>
+        </div>
+
+        <!-- Live transcript -->
+        <div class="voice-transcript" id="voiceTranscript">
+            <div class="voice-transcript-header">Live Transcript</div>
+            <div id="transcriptContent"></div>
+        </div>
+
+        <!-- Controls -->
+        <div class="voice-controls">
+            <div style="text-align:center;">
+                <button class="mic-btn" id="micBtn" onclick="toggleMic()">🎤</button>
+                <div class="mic-label" id="micLabel">Mic On</div>
+            </div>
+            <div style="text-align:center;">
+                <button class="end-call-btn" id="endCallBtn" onclick="endVoiceSession()">📞</button>
+                <div class="mic-label">End</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════ TEXT CHAT SCREEN ═══════════════════ -->
+    <div class="screen" id="chatScreen">
+        <div class="chat-header-bar">
+            <div class="chat-header-left">
+                <div class="chat-noor-mini">👩‍⚕️</div>
+                <div class="chat-noor-info">
+                    <div class="name">Noor</div>
+                    <div class="status">● Online — Intake in progress</div>
+                </div>
+            </div>
+            <button class="mode-toggle" onclick="switchToVoice()">
+                🎤 Switch to Voice
+            </button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="tdot"></div>
+            <div class="tdot"></div>
+            <div class="tdot"></div>
+        </div>
+
+        <div class="chat-input-bar" id="chatInputBar">
+            <textarea id="chatInput" placeholder="Type your message..." rows="1"
+                      onkeydown="handleKey(event)"></textarea>
+            <button class="btn-send" id="btnSend" onclick="sendTextMessage()">Send</button>
+        </div>
+    </div>
+
+    <!-- ═══════════════════ COMPLETION SCREEN ═══════════════════ -->
+    <div class="screen complete-screen" id="completeScreen">
+        <div class="complete-card">
+            <div class="check-icon">✓</div>
+            <h2>Intake Complete</h2>
+            <p>Thank you for your time with Noor. Your doctor has been notified and will be fully prepared for your consultation.</p>
+            <div class="complete-items">
+                <div class="ci"><span class="ck">✔</span> All information recorded securely</div>
+                <div class="ci"><span class="ck">✔</span> Doctor has been notified via email</div>
+                <div class="ci"><span class="ck">✔</span> Clinical summary prepared in doctor portal</div>
+                <div class="ci"><span class="ck">✔</span> Your visit history has been updated</div>
+            </div>
+            <a class="btn-back" href="/">Return to Home</a>
+        </div>
+    </div>
+
+    <script>
+    // ═══════════════════════════════════════════════════════════
+    //  MHP Patient Portal — Voice-First with Text Fallback
+    // ═══════════════════════════════════════════════════════════
+
+    const API = '';
+    let patientId = null;
+    let patientName = '';
+    let currentMode = 'voice';  // 'voice' or 'text'
+
+    // ─── Voice State ───
+    let ws = null;                     // WebSocket connection
+    let audioContext = null;           // For capturing mic audio
+    let playbackContext = null;        // For playing Noor's audio
+    let micStream = null;              // Mic MediaStream
+    let scriptProcessor = null;        // Audio processor node
+    let isMicMuted = false;
+    let isNoorSpeaking = false;
+    let nextPlayTime = 0;              // Audio queue timing
+    let voiceSessionActive = false;
+    let sessionEnding = false;         // True when user clicked End
+    let sessionSaved = false;          // True when server confirmed save
+
+    // ═══════════════════ INIT ═══════════════════
+
+    window.addEventListener('DOMContentLoaded', async () => {
+        patientId = sessionStorage.getItem('patient_id');
+        if (!patientId) {
+            window.location.href = '/';
+            return;
+        }
+        patientId = parseInt(patientId);
+        await loadWelcome();
+    });
+
+    async function loadWelcome() {
+        try {
+            const res = await fetch(`${API}/api/patient/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ patient_id: patientId }),
+            });
+            const data = await res.json();
+            patientName = data.patient_name;
+
+            document.getElementById('welcomeName').textContent = `Welcome, ${data.patient_name}`;
+
+            if (data.is_returning && data.last_visit_summary) {
+                document.getElementById('welcomeGreeting').textContent =
+                    `Good to see you again. Noor remembers your last visit and is ready to check in on your progress.`;
+                document.getElementById('lastVisitBox').style.display = 'block';
+
+                const lv = data.last_visit_summary;
+                document.getElementById('lastVisitGrid').innerHTML = `
+                    <div class="lv-item"><div class="lbl">Last Visit</div><div class="val">${lv.session_date ? new Date(lv.session_date).toLocaleDateString() : 'N/A'}</div></div>
+                    <div class="lv-item"><div class="lbl">Pain Score</div><div class="val">${lv.pain_score != null ? lv.pain_score + '/10' : 'N/A'}</div></div>
+                    <div class="lv-item"><div class="lbl">Pain Location</div><div class="val">${lv.pain_location || 'N/A'}</div></div>
+                    <div class="lv-item"><div class="lbl">Medication</div><div class="val">${lv.medication_compliance || 'N/A'}</div></div>
+                    <div class="lv-item"><div class="lbl">Emotional State</div><div class="val">${lv.emotional_state || 'N/A'}</div></div>
+                    <div class="lv-item"><div class="lbl">Sleep Quality</div><div class="val">${lv.sleep_quality || 'N/A'}</div></div>
+                `;
+            } else {
+                document.getElementById('firstVisitMsg').style.display = 'block';
+            }
+        } catch (e) {
+            console.error('Welcome load failed:', e);
+        }
+    }
+
+    // ═══════════════════ START CONSULTATION ═══════════════════
+
+    async function startConsultation() {
+        const btn = document.getElementById('btnStart');
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳</span> Connecting to Noor...';
+
+        currentMode = 'voice';
+
+        try {
+            // Request mic permission first
+            micStream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    channelCount: 1,
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true,
+                }
+            });
+
+            // Switch to voice screen
+            showScreen('voiceScreen');
+
+            // Start the voice session
+            await startVoiceSession();
+
+        } catch (e) {
+            console.error('Failed to start voice:', e);
+
+            if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
+                alert('Microphone access is required for voice consultation. Switching to text mode.');
+                startTextMode();
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = '<span>🎤</span> Start Consultation (Voice)';
+                alert('Failed to connect. Please try again.');
+            }
+        }
+    }
+
+    function startTextMode() {
+        currentMode = 'text';
+        showScreen('chatScreen');
+        startTextSession();
+    }
+
+    // ═══════════════════ VOICE SESSION ═══════════════════
+
+    async function startVoiceSession() {
+        voiceSessionActive = true;
+        sessionEnding = false;
+        sessionSaved = false;
+        setVoiceStatus('connecting', 'Connecting to Noor...', 'Loading your medical history...');
+
+        // Create audio contexts
+        // Capture context at browser's native rate, we downsample to 16kHz
+        audioContext = new AudioContext();
+
+        // Playback context at browser's DEFAULT rate — let the browser handle
+        // resampling from 24kHz buffers to hardware output rate.
+        // This prevents distortion caused by forcing an unsupported sample rate.
+        playbackContext = new AudioContext();
+        nextPlayTime = 0;
+
+        // Open WebSocket
+        const wsProtocol = location.protocol === 'https:' ? 'wss' : 'ws';
+        ws = new WebSocket(`${wsProtocol}://${location.host}/ws/voice/${patientId}`);
+        ws.binaryType = 'arraybuffer';
+
+        ws.onopen = () => {
+            console.log('[VOICE] WebSocket connected');
+        };
+
+        ws.onmessage = (event) => {
+            if (event.data instanceof ArrayBuffer) {
+                // Audio data from Noor — play it
+                playAudioChunk(event.data);
+                setNoorSpeaking(true);
+            } else {
+                // JSON message
+                try {
+                    const msg = JSON.parse(event.data);
+                    handleServerMessage(msg);
+                } catch (e) {
+                    console.error('Failed to parse message:', e);
+                }
+            }
+        };
+
+        ws.onclose = () => {
+            console.log('[VOICE] WebSocket closed');
+            voiceSessionActive = false;
+            stopMicCapture();
+
+            // If session was ending (user clicked End) and server saved,
+            // show completion screen
+            if (sessionEnding || sessionSaved) {
+                cleanupVoice();
+                showScreen('completeScreen');
+            }
+        };
+
+        ws.onerror = (e) => {
+            console.error('[VOICE] WebSocket error:', e);
+            setVoiceStatus('error', 'Connection Error', 'Please refresh and try again.');
+        };
+    }
+
+    function handleServerMessage(msg) {
+        switch (msg.type) {
+            case 'status':
+                if (msg.status === 'connecting') {
+                    setVoiceStatus('connecting', 'Loading your history...', msg.message);
+                } else if (msg.status === 'ready') {
+                    setVoiceStatus('speaking', 'Noor is greeting you...', 'Listen...');
+                    document.getElementById('voiceNoorStatus').textContent = '● Online';
+                } else if (msg.status === 'complete') {
+                    // Natural intake completion — Noor collected all fields
+                    setVoiceStatus('connecting', 'Saving your information...', 'Please wait...');
+                    sessionEnding = true;
+                } else if (msg.status === 'saved') {
+                    // Server confirmed save — show completion
+                    console.log('Session saved:', msg.session_id);
+                    sessionSaved = true;
+                    cleanupVoice();
+                    showScreen('completeScreen');
+                } else if (msg.status === 'error') {
+                    setVoiceStatus('error', 'Error', msg.message);
+                }
+                break;
+
+            case 'transcript':
+                // Transcription from Gemini (both Noor and patient)
+                addTranscriptLine(msg.role, msg.text);
+                if (msg.role === 'ai') {
+                    setNoorSpeaking(true);
+                }
+                break;
+
+            case 'turn_complete':
+                // Noor finished speaking — start listening
+                setTimeout(() => {
+                    setNoorSpeaking(false);
+                    setVoiceStatus('listening', 'Listening...', 'Speak naturally');
+                    startMicCapture();
+                }, 500);
+                break;
+
+            case 'urgent':
+                document.getElementById('urgentBanner').classList.add('show');
+                break;
+
+            case 'error':
+                setVoiceStatus('error', 'Error', msg.message || 'Connection issue');
+                break;
+        }
+    }
+
+    // ─── Audio Playback (Noor's voice) ───
+
+    function playAudioChunk(arrayBuffer) {
+        if (!playbackContext) return;
+
+        // Resume context if suspended (browser autoplay policy)
+        if (playbackContext.state === 'suspended') {
+            playbackContext.resume();
+        }
+
+        // Validate buffer — must be even number of bytes for Int16
+        if (arrayBuffer.byteLength < 2 || arrayBuffer.byteLength % 2 !== 0) {
+            console.warn('[AUDIO] Skipping malformed audio chunk:', arrayBuffer.byteLength, 'bytes');
+            return;
+        }
+
+        // Convert Int16 PCM to Float32
+        const int16 = new Int16Array(arrayBuffer);
+        const float32 = new Float32Array(int16.length);
+        for (let i = 0; i < int16.length; i++) {
+            float32[i] = int16[i] / 32768.0;
+        }
+
+        // Create audio buffer at 24kHz — browser resamples to output rate automatically
+        const buffer = playbackContext.createBuffer(1, float32.length, 24000);
+        buffer.getChannelData(0).set(float32);
+
+        const source = playbackContext.createBufferSource();
+        source.buffer = buffer;
+        source.connect(playbackContext.destination);
+
+        // Schedule playback with proper queuing to avoid gaps/overlaps
+        const now = playbackContext.currentTime;
+        if (nextPlayTime === 0 || nextPlayTime < now) {
+            // First chunk or caught up — add small buffer delay for smooth start
+            nextPlayTime = now + 0.08;
+        }
+        source.start(nextPlayTime);
+        nextPlayTime += buffer.duration;
+    }
+
+    // ─── Audio Capture (Patient's voice) ───
+
+    function startMicCapture() {
+        if (!micStream || !audioContext || !ws || ws.readyState !== WebSocket.OPEN) return;
+        if (scriptProcessor) return; // Already capturing
+
+        const source = audioContext.createMediaStreamSource(micStream);
+
+        // ScriptProcessorNode to get raw audio samples
+        scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
+
+        // Calculate downsample ratio: native rate → 16kHz
+        const nativeRate = audioContext.sampleRate;
+        const targetRate = 16000;
+        const ratio = nativeRate / targetRate;
+
+        scriptProcessor.onaudioprocess = (e) => {
+            if (isMicMuted || !voiceSessionActive || sessionEnding) return;
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+
+            const inputData = e.inputBuffer.getChannelData(0);
+
+            // Downsample to 16kHz
+            const outputLength = Math.floor(inputData.length / ratio);
+            const pcm16 = new Int16Array(outputLength);
+
+            for (let i = 0; i < outputLength; i++) {
+                const srcIdx = Math.floor(i * ratio);
+                const sample = Math.max(-1, Math.min(1, inputData[srcIdx]));
+                pcm16[i] = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+            }
+
+            // Send PCM bytes to server
+            ws.send(pcm16.buffer);
+        };
+
+        source.connect(scriptProcessor);
+        scriptProcessor.connect(audioContext.destination);
+    }
+
+    function stopMicCapture() {
+        if (scriptProcessor) {
+            scriptProcessor.disconnect();
+            scriptProcessor = null;
+        }
+    }
+
+    function toggleMic() {
+        isMicMuted = !isMicMuted;
+        const btn = document.getElementById('micBtn');
+        const label = document.getElementById('micLabel');
+
+        if (isMicMuted) {
+            btn.classList.add('muted');
+            btn.textContent = '🔇';
+            label.textContent = 'Muted';
+        } else {
+            btn.classList.remove('muted');
+            btn.textContent = '🎤';
+            label.textContent = 'Mic On';
+        }
+    }
+
+    // ─── Voice UI Helpers ───
+
+    function setVoiceStatus(state, mainText, subText) {
+        document.getElementById('voiceStatusText').textContent = mainText;
+        document.getElementById('voiceStatusSub').textContent = subText || '';
+
+        const container = document.getElementById('voiceAvatarContainer');
+        container.className = 'voice-avatar-container';
+
+        if (state === 'speaking') container.classList.add('speaking');
+        else if (state === 'listening') container.classList.add('listening');
+    }
+
+    function setNoorSpeaking(speaking) {
+        isNoorSpeaking = speaking;
+        const container = document.getElementById('voiceAvatarContainer');
+
+        if (speaking) {
+            container.classList.add('speaking');
+            container.classList.remove('listening');
+            document.getElementById('voiceStatusText').textContent = 'Noor is speaking...';
+            document.getElementById('voiceStatusSub').textContent = 'Listen...';
+            stopMicCapture(); // Don't capture while Noor speaks (prevents echo)
+        } else {
+            container.classList.remove('speaking');
+            container.classList.add('listening');
+        }
+    }
+
+    function addTranscriptLine(role, text) {
+        const container = document.getElementById('transcriptContent');
+        const line = document.createElement('div');
+        line.className = 'vt-line';
+
+        const roleName = role === 'ai' ? 'Noor' : 'You';
+        const roleClass = role === 'ai' ? 'ai' : 'patient';
+
+        line.innerHTML = `<span class="vt-role ${roleClass}">${roleName}:</span> ${esc(text)}`;
+        container.appendChild(line);
+
+        // Scroll to bottom
+        const transcript = document.getElementById('voiceTranscript');
+        transcript.scrollTop = transcript.scrollHeight;
+    }
+
+    function endVoiceSession() {
+        if (sessionEnding) return; // Already ending
+        sessionEnding = true;
+
+        // Stop mic capture immediately
+        stopMicCapture();
+        voiceSessionActive = false;
+
+        // Show "saving" state
+        setVoiceStatus('connecting', 'Saving your information...', 'Your doctor will be notified...');
+        document.getElementById('endCallBtn').disabled = true;
+        document.getElementById('micBtn').disabled = true;
+
+        // Tell server to end the session — server will finalize and send "saved"
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'end_session' }));
+        }
+
+        // Safety timeout — if server doesn't respond in 15 seconds, show completion anyway
+        setTimeout(() => {
+            if (!sessionSaved) {
+                console.warn('[VOICE] Server finalization timeout — showing completion anyway');
+                cleanupVoice();
+                showScreen('completeScreen');
+            }
+        }, 15000);
+    }
+
+    function cleanupVoice() {
+        voiceSessionActive = false;
+        stopMicCapture();
+        if (micStream) {
+            micStream.getTracks().forEach(t => t.stop());
+            micStream = null;
+        }
+        if (audioContext) { audioContext.close().catch(() => {}); audioContext = null; }
+        if (playbackContext) { playbackContext.close().catch(() => {}); playbackContext = null; }
+        if (ws) {
+            try { ws.close(); } catch(e) {}
+            ws = null;
+        }
+    }
+
+    // ═══════════════════ MODE SWITCHING ═══════════════════
+
+    function switchToText() {
+        // Stop voice session, switch to text mode using REST API
+        cleanupVoice();
+        currentMode = 'text';
+        showScreen('chatScreen');
+        startTextSession();
+    }
+
+    function switchToVoice() {
+        currentMode = 'voice';
+        showScreen('voiceScreen');
+        startConsultation();
+    }
+
+    // ═══════════════════ TEXT MODE (REST API fallback) ═══════════════════
+
+    async function startTextSession() {
+        try {
+            const res = await fetch(`${API}/api/patient/start-consultation`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ patient_id: patientId }),
+            });
+            const data = await res.json();
+            addChatMsg('ai', data.greeting);
+            document.getElementById('chatInput').focus();
+        } catch (e) {
+            addChatMsg('ai', 'I apologize — there was a connection issue. Please try again.');
+        }
+    }
+
+    async function sendTextMessage() {
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        if (!text) return;
+
+        addChatMsg('human', text);
+        input.value = '';
+        input.style.height = 'auto';
+        showTyping(true);
+        document.getElementById('btnSend').disabled = true;
+
+        try {
+            const res = await fetch(`${API}/api/patient/chat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ patient_id: patientId, message: text }),
+            });
+            const data = await res.json();
+            showTyping(false);
+
+            if (data.is_urgent) {
+                addChatMsg('urgent', '⚠️ Your message has been flagged and your doctor has been alerted immediately. You are not alone — please continue sharing.');
+            }
+
+            addChatMsg('ai', data.response);
+
+            if (data.is_complete) {
+                setTimeout(() => showScreen('completeScreen'), 2000);
+            }
+        } catch (e) {
+            showTyping(false);
+            addChatMsg('ai', 'I apologize — there was a connection issue. Could you please try again?');
+        }
+
+        document.getElementById('btnSend').disabled = false;
+    }
+
+    // ═══════════════════ SHARED HELPERS ═══════════════════
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function addChatMsg(type, text) {
+        const box = document.getElementById('chatMessages');
+        const div = document.createElement('div');
+        div.className = `msg ${type}`;
+        if (type === 'ai') {
+            div.innerHTML = `<div class="sender">Noor</div>${esc(text)}`;
+        } else {
+            div.innerHTML = esc(text);
+        }
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+    }
+
+    function esc(t) {
+        return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+    }
+
+    function showTyping(show) {
+        document.getElementById('typingIndicator').classList.toggle('show', show);
+    }
+
+    function handleKey(e) {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendTextMessage(); }
+    }
+
+    document.getElementById('chatInput')?.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+    </script>
+</body>
+</html>

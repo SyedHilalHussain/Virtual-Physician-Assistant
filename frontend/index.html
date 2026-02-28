@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MHP — Login</title>
+    <style>
+        :root {
+            --primary: #0f766e;
+            --primary-light: #ccfbf1;
+            --primary-dark: #0a5c56;
+            --accent: #7c3aed;
+            --bg: #f0fdfa;
+            --surface: #ffffff;
+            --text: #134e4a;
+            --text-light: #5eead4;
+            --muted: #6b7280;
+            --border: #d1d5db;
+            --danger: #dc2626;
+            --radius: 14px;
+            --shadow: 0 4px 24px rgba(15,118,110,0.10);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #e0f2fe 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 460px;
+            padding: 20px;
+        }
+        /* ─── Logo ─── */
+        .logo-block {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .logo-icon {
+            width: 72px; height: 72px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 20px;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 36px;
+            color: white;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 24px rgba(15,118,110,0.25);
+        }
+        .logo-block h1 {
+            font-size: 26px;
+            color: var(--text);
+            font-weight: 700;
+        }
+        .logo-block p {
+            color: var(--muted);
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        /* ─── Card ─── */
+        .card {
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 36px 32px;
+            box-shadow: var(--shadow);
+        }
+
+        /* ─── Role Tabs ─── */
+        .role-tabs {
+            display: flex;
+            background: #f3f4f6;
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 28px;
+        }
+        .role-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            background: none;
+            border-radius: 10px;
+            cursor: pointer;
+            color: var(--muted);
+            transition: all 0.2s;
+        }
+        .role-tab.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .role-tab:hover:not(.active) { color: var(--text); }
+
+        /* ─── Mode Toggle ─── */
+        .mode-toggle {
+            display: flex;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #f3f4f6;
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            cursor: pointer;
+            color: var(--muted);
+            transition: all 0.2s;
+        }
+        .mode-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        /* ─── Form ─── */
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+            background: #fafafa;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--primary);
+            background: white;
+        }
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+            margin-top: 8px;
+        }
+        .btn-primary:hover { opacity: 0.92; }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .error-msg {
+            color: var(--danger);
+            font-size: 13px;
+            margin-top: 8px;
+            text-align: center;
+            display: none;
+        }
+        .error-msg.show { display: block; }
+        .form-section { display: none; }
+        .form-section.active { display: block; }
+        .row { display: flex; gap: 12px; }
+        .row .form-group { flex: 1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-block">
+            <div class="logo-icon">🩺</div>
+            <h1>MHP Palliative Care</h1>
+            <p>Cancer Pain Management — Clinical Intake System</p>
+        </div>
+
+        <div class="card">
+            <!-- Role Tabs -->
+            <div class="role-tabs">
+                <button class="role-tab active" onclick="setRole('patient')">🧑 Patient</button>
+                <button class="role-tab" onclick="setRole('doctor')">👩‍⚕️ Doctor</button>
+            </div>
+
+            <!-- ─── PATIENT SECTION ─── -->
+            <div class="form-section active" id="patientSection">
+                <div class="mode-toggle">
+                    <button class="mode-btn active" onclick="setMode('login')">Login</button>
+                    <button class="mode-btn" onclick="setMode('signup')">New Patient</button>
+                </div>
+
+                <!-- Patient Login -->
+                <div id="patientLogin">
+                    <div class="form-group">
+                        <label>Select Your Name</label>
+                        <select id="patientSelect">
+                            <option value="">— Choose —</option>
+                        </select>
+                    </div>
+                    <button class="btn-primary" onclick="loginPatient()">Login</button>
+                </div>
+
+                <!-- Patient Signup -->
+                <div id="patientSignup" style="display:none;">
+                    <div class="form-group">
+                        <label>Full Name *</label>
+                        <input type="text" id="regName" placeholder="Enter your full name" />
+                    </div>
+                    <div class="row">
+                        <div class="form-group">
+                            <label>Age</label>
+                            <input type="number" id="regAge" placeholder="Age" />
+                        </div>
+                        <div class="form-group">
+                            <label>Gender</label>
+                            <select id="regGender">
+                                <option value="">Select</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Diagnosis</label>
+                        <input type="text" id="regDiagnosis" placeholder="e.g. Lung Cancer" />
+                    </div>
+                    <button class="btn-primary" onclick="registerPatient()">Register & Continue</button>
+                </div>
+            </div>
+
+            <!-- ─── DOCTOR SECTION ─── -->
+            <div class="form-section" id="doctorSection">
+                <div class="form-group">
+                    <label>Select Doctor</label>
+                    <select id="doctorSelect">
+                        <option value="">— Choose —</option>
+                    </select>
+                </div>
+                <button class="btn-primary" onclick="loginDoctor()">Open Portal</button>
+            </div>
+
+            <div class="error-msg" id="errorMsg"></div>
+        </div>
+    </div>
+
+    <script>
+        const API = '';
+        let currentRole = 'patient';
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadPatients();
+            loadDoctors();
+        });
+
+        function setRole(role) {
+            currentRole = role;
+            document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('patientSection').classList.toggle('active', role === 'patient');
+            document.getElementById('doctorSection').classList.toggle('active', role === 'doctor');
+            hideError();
+        }
+
+        function setMode(mode) {
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('patientLogin').style.display = mode === 'login' ? 'block' : 'none';
+            document.getElementById('patientSignup').style.display = mode === 'signup' ? 'block' : 'none';
+            hideError();
+        }
+
+        async function loadPatients() {
+            try {
+                const res = await fetch(`${API}/api/patient/list`);
+                const patients = await res.json();
+                const sel = document.getElementById('patientSelect');
+                patients.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = `${p.name}${p.age ? ' (' + p.age + ')' : ''}`;
+                    sel.appendChild(opt);
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadDoctors() {
+            try {
+                const res = await fetch(`${API}/api/doctor/list`);
+                const doctors = await res.json();
+                const sel = document.getElementById('doctorSelect');
+                doctors.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d.id;
+                    opt.textContent = `${d.name} — ${d.specialty}`;
+                    sel.appendChild(opt);
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        async function loginPatient() {
+            const id = document.getElementById('patientSelect').value;
+            if (!id) return showError('Please select your name.');
+            // Store patient_id and redirect
+            sessionStorage.setItem('patient_id', id);
+            window.location.href = '/patient';
+        }
+
+        async function registerPatient() {
+            const name = document.getElementById('regName').value.trim();
+            if (!name) return showError('Please enter your name.');
+
+            try {
+                const res = await fetch(`${API}/api/patient/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name,
+                        age: parseInt(document.getElementById('regAge').value) || null,
+                        gender: document.getElementById('regGender').value || null,
+                        diagnosis: document.getElementById('regDiagnosis').value || null,
+                    }),
+                });
+                if (!res.ok) throw new Error('Registration failed');
+                const data = await res.json();
+                sessionStorage.setItem('patient_id', data.id);
+                window.location.href = '/patient';
+            } catch (e) {
+                showError('Registration failed. Please try again.');
+            }
+        }
+
+        function loginDoctor() {
+            const id = document.getElementById('doctorSelect').value;
+            if (!id) return showError('Please select a doctor.');
+            sessionStorage.setItem('doctor_id', id);
+            window.location.href = '/doctor';
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('errorMsg');
+            el.textContent = msg;
+            el.classList.add('show');
+        }
+        function hideError() {
+            document.getElementById('errorMsg').classList.remove('show');
+        }
+    </script>
+</body>
+</html>

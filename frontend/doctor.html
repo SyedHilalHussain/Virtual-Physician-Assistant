@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MHP — Doctor Portal</title>
+    <style>
+        :root {
+            --primary: #1e3a5f;
+            --primary-light: #eef4fb;
+            --primary-dark: #0f2744;
+            --accent: #0f766e;
+            --accent-light: #ccfbf1;
+            --bg: #f1f5f9;
+            --surface: #ffffff;
+            --text: #1e293b;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --danger: #dc2626;
+            --danger-light: #fef2f2;
+            --success: #16a34a;
+            --warning: #ea580c;
+            --shadow: 0 4px 20px rgba(30,58,95,0.08);
+            --radius: 16px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ─── Header ─── */
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 14px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+            position: sticky; top: 0; z-index: 50;
+        }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .header-icon {
+            width: 38px; height: 38px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+        }
+        .header-title { font-size: 16px; font-weight: 600; }
+        .header-sub { font-size: 11px; opacity: 0.8; }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        .doctor-name { font-size: 14px; font-weight: 500; opacity: 0.9; }
+        .btn-logout {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        /* ─── Layout ─── */
+        .page { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+        /* ─── Screen Toggle ─── */
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* ─── Stats ─── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .stat-card {
+            background: var(--surface);
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+        .stat-card .lbl { font-size: 12px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-card .val { font-size: 30px; font-weight: 700; color: var(--primary); }
+        .stat-card.urgent .val { color: var(--danger); }
+
+        /* ─── Section Header ─── */
+        .section-hdr {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ─── Patient Cards Grid ─── */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .patient-card {
+            background: var(--surface);
+            border-radius: 14px;
+            padding: 22px;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            border-left: 5px solid var(--accent);
+            position: relative;
+        }
+        .patient-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 28px rgba(30,58,95,0.15);
+        }
+        .patient-card.urgent-card {
+            border-left-color: var(--danger);
+        }
+        .pc-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .pc-name { font-size: 17px; font-weight: 600; color: var(--text); }
+        .pc-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+        .pc-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .pc-badge.urgent { background: var(--danger); color: white; }
+        .pc-badge.normal { background: var(--accent-light); color: var(--accent); }
+        .pc-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+        }
+        .pc-stat {
+            text-align: center;
+            padding: 8px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        .pc-stat .lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; }
+        .pc-stat .val { font-size: 15px; font-weight: 600; color: var(--text); margin-top: 2px; }
+        .pc-stat .val.high { color: var(--danger); }
+
+        /* ─── DETAIL VIEW ─── */
+        .detail-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 18px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            color: var(--muted);
+            margin-bottom: 20px;
+        }
+        .detail-back:hover { background: var(--primary-light); color: var(--primary); }
+
+        .detail-header {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .detail-avatar {
+            width: 64px; height: 64px;
+            background: linear-gradient(135deg, var(--accent), #2dd4bf);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; color: white;
+            flex-shrink: 0;
+        }
+        .detail-info h2 { font-size: 22px; color: var(--text); }
+        .detail-info p { font-size: 13px; color: var(--muted); margin-top: 2px; }
+        .detail-tags { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+        .detail-tag {
+            padding: 4px 12px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* ─── Intake Report Card ─── */
+        .report-card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+        .report-card h3 {
+            font-size: 16px;
+            color: var(--primary-dark);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .report-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .rg-item {
+            padding: 12px 14px;
+            background: #f8fafc;
+            border-radius: 10px;
+        }
+        .rg-item .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px; }
+        .rg-item .val { font-size: 14px; font-weight: 500; color: var(--text); }
+        .rg-item.danger-item { background: var(--danger-light); border: 1px solid #fca5a5; }
+        .rg-item.danger-item .val { color: var(--danger); font-weight: 600; }
+        .rg-item.full { grid-column: span 2; }
+
+        /* ─── Visit History Timeline ─── */
+        .timeline { position: relative; padding-left: 28px; }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px; top: 0; bottom: 0;
+            width: 2px;
+            background: var(--border);
+        }
+        .tl-item {
+            position: relative;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+        .tl-dot {
+            position: absolute;
+            left: -22px; top: 4px;
+            width: 12px; height: 12px;
+            background: var(--accent);
+            border-radius: 50%;
+            border: 2px solid var(--surface);
+        }
+        .tl-item.urgent .tl-dot { background: var(--danger); }
+        .tl-content {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 14px 16px;
+            transition: background 0.2s;
+        }
+        .tl-content:hover { background: var(--primary-light); }
+        .tl-date { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+        .tl-summary { font-size: 14px; color: var(--text); }
+        .tl-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .tl-badge.urgent { background: var(--danger); color: white; }
+
+        /* ─── Ask Agent ─── */
+        .ask-agent-box {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            margin-top: 20px;
+        }
+        .ask-agent-box h3 {
+            font-size: 16px;
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .ask-input-row {
+            display: flex;
+            gap: 10px;
+        }
+        .ask-input-row input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+        }
+        .ask-input-row input:focus { border-color: var(--accent); }
+        .ask-input-row button {
+            padding: 12px 22px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .ask-input-row button:hover { background: #0a5c56; }
+        .ask-input-row button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .ask-response {
+            margin-top: 16px;
+            padding: 16px;
+            background: var(--accent-light);
+            border-radius: 10px;
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--text);
+            display: none;
+        }
+        .ask-response.show { display: block; }
+        .ask-response .label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 24px;
+            color: var(--muted);
+        }
+        .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <div class="header">
+        <div class="header-left">
+            <div class="header-icon">🏥</div>
+            <div>
+                <div class="header-title">MHP Doctor Portal</div>
+                <div class="header-sub">Cancer Pain Management — Intake Dashboard</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <span class="doctor-name" id="doctorNameHeader"></span>
+            <a class="btn-logout" href="/">← Logout</a>
+        </div>
+    </div>
+
+    <div class="page">
+        <!-- ════════════ DASHBOARD SCREEN ════════════ -->
+        <div class="screen active" id="dashboardScreen">
+            <div class="stats-row" id="statsRow">
+                <div class="stat-card"><div class="lbl">Total Patients</div><div class="val" id="statPatients">—</div></div>
+                <div class="stat-card urgent"><div class="lbl">Urgent Flags</div><div class="val" id="statUrgent">—</div></div>
+                <div class="stat-card"><div class="lbl">Intakes Today</div><div class="val" id="statToday">—</div></div>
+                <div class="stat-card"><div class="lbl">Total Sessions</div><div class="val" id="statSessions">—</div></div>
+            </div>
+
+            <div class="section-hdr">👥 Patients</div>
+            <div class="cards-grid" id="cardsGrid">
+                <div class="empty-state">
+                    <div class="icon">📋</div>
+                    <p>Loading patients...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════════ PATIENT DETAIL SCREEN ════════════ -->
+        <div class="screen" id="detailScreen">
+            <button class="detail-back" onclick="showDashboard()">← Back to Dashboard</button>
+
+            <div class="detail-header" id="detailHeader"></div>
+
+            <!-- Latest Intake Report -->
+            <div class="report-card" id="latestReport">
+                <h3>📋 Latest Intake Report</h3>
+                <div class="report-grid" id="reportGrid"></div>
+            </div>
+
+            <!-- Visit History -->
+            <div class="report-card">
+                <h3>📅 Visit History</h3>
+                <div class="timeline" id="timeline"></div>
+            </div>
+
+            <!-- Ask Agent -->
+            <div class="ask-agent-box">
+                <h3>🤖 Ask Noor About This Patient</h3>
+                <p style="font-size:13px; color:var(--muted); margin-bottom:14px;">
+                    Ask any question — Noor will respond using this patient's complete medical history, intake data, and conversation memory.
+                </p>
+                <div class="ask-input-row">
+                    <input type="text" id="askInput" placeholder="e.g. Has the patient's pain improved over time?"
+                           onkeydown="if(event.key==='Enter')askAgent()" />
+                    <button id="askBtn" onclick="askAgent()">Ask Noor</button>
+                </div>
+                <div class="ask-response" id="askResponse">
+                    <div class="label">Noor's Response</div>
+                    <div id="askResponseText"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = '';
+        let doctorId = null;
+        let doctorName = '';
+        let patientsData = [];
+        let currentPatientId = null;
+
+        // ─── Init ───
+        window.addEventListener('DOMContentLoaded', async () => {
+            doctorId = sessionStorage.getItem('doctor_id');
+            if (!doctorId) { window.location.href = '/'; return; }
+            doctorId = parseInt(doctorId);
+
+            // Get doctor info
+            try {
+                const res = await fetch(`${API}/api/doctor/list`);
+                const docs = await res.json();
+                const doc = docs.find(d => d.id === doctorId);
+                if (doc) {
+                    doctorName = doc.name;
+                    document.getElementById('doctorNameHeader').textContent = doc.name;
+                }
+            } catch (e) {}
+
+            loadDashboard();
+        });
+
+        async function loadDashboard() {
+            try {
+                const res = await fetch(`${API}/api/doctor/patients/${doctorId}`);
+                patientsData = await res.json();
+                renderDashboard();
+            } catch (e) {
+                console.error('Dashboard load failed:', e);
+            }
+        }
+
+        function renderDashboard() {
+            const patients = patientsData;
+            const totalPatients = patients.length;
+            const urgentCount = patients.filter(p => p.last_visit && p.last_visit.is_urgent).length;
+            const today = new Date().toISOString().slice(0, 10);
+            const todayCount = patients.filter(p =>
+                p.last_visit && p.last_visit.session_date && p.last_visit.session_date.startsWith(today)
+            ).length;
+            const totalSessions = patients.reduce((sum, p) => sum + (p.total_visits || 0), 0);
+
+            document.getElementById('statPatients').textContent = totalPatients;
+            document.getElementById('statUrgent').textContent = urgentCount;
+            document.getElementById('statToday').textContent = todayCount;
+            document.getElementById('statSessions').textContent = totalSessions;
+
+            const grid = document.getElementById('cardsGrid');
+            if (patients.length === 0) {
+                grid.innerHTML = '<div class="empty-state"><div class="icon">👥</div><p>No patients registered yet.</p></div>';
+                return;
+            }
+
+            grid.innerHTML = patients.map(p => {
+                const lv = p.last_visit;
+                const isUrgent = lv && lv.is_urgent;
+                const painScore = lv ? lv.pain_score : null;
+                const lastDate = lv && lv.session_date ? new Date(lv.session_date).toLocaleDateString() : 'No visits';
+
+                return `
+                    <div class="patient-card ${isUrgent ? 'urgent-card' : ''}" onclick="viewPatient(${p.id})">
+                        <div class="pc-top">
+                            <div>
+                                <div class="pc-name">${p.name}</div>
+                                <div class="pc-meta">${p.age ? p.age + 'y' : ''} ${p.gender || ''} · ${p.diagnosis || 'Cancer Pain'}</div>
+                            </div>
+                            ${isUrgent
+                                ? '<span class="pc-badge urgent">🚨 Urgent</span>'
+                                : '<span class="pc-badge normal">Active</span>'
+                            }
+                        </div>
+                        <div class="pc-stats">
+                            <div class="pc-stat">
+                                <div class="lbl">Pain</div>
+                                <div class="val ${painScore >= 7 ? 'high' : ''}">${painScore != null ? painScore + '/10' : '—'}</div>
+                            </div>
+                            <div class="pc-stat">
+                                <div class="lbl">Visits</div>
+                                <div class="val">${p.total_visits || 0}</div>
+                            </div>
+                            <div class="pc-stat">
+                                <div class="lbl">Last Visit</div>
+                                <div class="val" style="font-size:12px">${lastDate}</div>
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        // ─── View Patient Detail ───
+        async function viewPatient(patientId) {
+            currentPatientId = patientId;
+            showScreen('detailScreen');
+
+            // Reset Ask Agent
+            document.getElementById('askResponse').classList.remove('show');
+            document.getElementById('askInput').value = '';
+
+            try {
+                const res = await fetch(`${API}/api/doctor/patient-history/${patientId}`);
+                const data = await res.json();
+                renderDetail(data);
+            } catch (e) {
+                console.error('Detail load failed:', e);
+            }
+        }
+
+        function renderDetail(data) {
+            const p = data.patient;
+            const sessions = data.sessions;
+
+            // Header
+            document.getElementById('detailHeader').innerHTML = `
+                <div class="detail-avatar">🧑</div>
+                <div class="detail-info">
+                    <h2>${p.name}</h2>
+                    <p>${p.age ? p.age + ' years' : ''} ${p.gender ? '· ' + p.gender : ''} · ${sessions.length} visit(s)</p>
+                    <div class="detail-tags">
+                        <span class="detail-tag">${p.diagnosis || 'Cancer Pain Management'}</span>
+                        <span class="detail-tag">${sessions.length} Sessions</span>
+                    </div>
+                </div>`;
+
+            // Latest report
+            const grid = document.getElementById('reportGrid');
+            if (sessions.length === 0) {
+                grid.innerHTML = '<p style="color:var(--muted);grid-column:span 2;">No intake sessions yet.</p>';
+            } else {
+                const s = sessions[0];
+                const highPain = s.pain_score >= 7;
+                const badMeds = ['no', 'partial'].includes((s.medication_compliance || '').toLowerCase());
+
+                grid.innerHTML = `
+                    <div class="rg-item ${highPain ? 'danger-item' : ''}">
+                        <div class="lbl">Pain Score</div>
+                        <div class="val">${s.pain_score != null ? s.pain_score + '/10' : 'N/A'}</div>
+                    </div>
+                    <div class="rg-item"><div class="lbl">Pain Location</div><div class="val">${s.pain_location || 'N/A'}</div></div>
+                    <div class="rg-item"><div class="lbl">Pain Type</div><div class="val">${s.pain_type || 'N/A'}</div></div>
+                    <div class="rg-item"><div class="lbl">Pain Duration</div><div class="val">${s.pain_duration || 'N/A'}</div></div>
+                    <div class="rg-item ${badMeds ? 'danger-item' : ''}">
+                        <div class="lbl">Medication Compliance</div>
+                        <div class="val">${s.medication_compliance || 'N/A'}</div>
+                    </div>
+                    <div class="rg-item"><div class="lbl">Side Effects</div><div class="val">${s.side_effects || 'None reported'}</div></div>
+                    <div class="rg-item"><div class="lbl">Sleep Quality</div><div class="val">${s.sleep_quality || 'N/A'}</div></div>
+                    <div class="rg-item"><div class="lbl">Appetite</div><div class="val">${s.appetite || 'N/A'}</div></div>
+                    <div class="rg-item"><div class="lbl">Emotional State</div><div class="val">${s.emotional_state || 'N/A'}</div></div>
+                    <div class="rg-item"><div class="lbl">Mobility</div><div class="val">${s.mobility || 'N/A'}</div></div>
+                    <div class="rg-item"><div class="lbl">New Symptoms</div><div class="val">${s.new_symptoms || 'None'}</div></div>
+                    <div class="rg-item"><div class="lbl">Home Support</div><div class="val">${s.home_support || 'N/A'}</div></div>
+                    <div class="rg-item full"><div class="lbl">Specific Concerns for Doctor</div><div class="val">${s.specific_concerns || 'None raised'}</div></div>
+                    ${s.is_urgent ? `<div class="rg-item danger-item full"><div class="lbl">🚨 Urgent Flag</div><div class="val">${s.urgent_reason || 'Flagged for urgent attention'}</div></div>` : ''}
+                `;
+            }
+
+            // Timeline
+            const tl = document.getElementById('timeline');
+            if (sessions.length === 0) {
+                tl.innerHTML = '<p style="color:var(--muted);">No visit history.</p>';
+            } else {
+                tl.innerHTML = sessions.map(s => `
+                    <div class="tl-item ${s.is_urgent ? 'urgent' : ''}">
+                        <div class="tl-dot"></div>
+                        <div class="tl-content">
+                            <div class="tl-date">
+                                ${s.session_date ? new Date(s.session_date).toLocaleString() : 'Unknown date'}
+                                ${s.is_urgent ? '<span class="tl-badge urgent">URGENT</span>' : ''}
+                            </div>
+                            <div class="tl-summary">
+                                Pain: ${s.pain_score != null ? s.pain_score + '/10' : '—'}
+                                · ${s.pain_location || ''}
+                                · Meds: ${s.medication_compliance || '—'}
+                                · ${s.emotional_state || ''}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // ─── Ask Agent ───
+        async function askAgent() {
+            const input = document.getElementById('askInput');
+            const question = input.value.trim();
+            if (!question || !currentPatientId) return;
+
+            const btn = document.getElementById('askBtn');
+            btn.disabled = true;
+            btn.textContent = 'Thinking...';
+
+            const respBox = document.getElementById('askResponse');
+            const respText = document.getElementById('askResponseText');
+            respBox.classList.remove('show');
+
+            try {
+                const res = await fetch(`${API}/api/doctor/ask-agent`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ patient_id: currentPatientId, question }),
+                });
+                const data = await res.json();
+
+                respText.innerHTML = esc(data.response);
+                respBox.classList.add('show');
+            } catch (e) {
+                respText.textContent = 'Failed to get a response. Please try again.';
+                respBox.classList.add('show');
+            }
+
+            btn.disabled = false;
+            btn.textContent = 'Ask Noor';
+        }
+
+        // ─── Navigation ───
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function showDashboard() {
+            showScreen('dashboardScreen');
+            loadDashboard();  // Refresh data
+        }
+
+        function esc(t) {
+            return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+        }
+
+        // Auto-refresh dashboard every 30s
+        setInterval(() => {
+            if (document.getElementById('dashboardScreen').classList.contains('active')) {
+                loadDashboard();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>
